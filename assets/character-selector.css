@@ -1,0 +1,505 @@
+/* ---- もちスラ画像カード。既存サイトの .card とは分離する。 ---- */
+
+.character-portals {
+  --portal-gold: #e8bd67;
+  position: relative;
+  padding: 18px 0 12px;
+  scroll-margin-top: 92px;
+}
+
+.character-portals-head { text-align: center; }
+.character-portals-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.42;
+  letter-spacing: .035em;
+}
+.character-portals-head > p:last-child {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.character-selector-stage {
+  position: relative;
+  height: clamp(600px, 66vw, 650px);
+  margin-top: 38px;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.character-selector-stage::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 48px;
+  z-index: 3;
+  width: 180px;
+  height: 108px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(255,255,255,.92) 0 3%,
+    rgba(197,222,255,.78) 7%,
+    rgba(108,158,255,.48) 24%,
+    rgba(70,116,235,.2) 43%,
+    transparent 72%);
+  box-shadow: none;
+  filter: none;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.character-selector-stage::after {
+  content: none;
+}
+
+.mochi-portal-float {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  display: grid;
+  place-items: start center;
+  width: 300px;
+  height: 480px;
+  opacity: .6;
+  filter: brightness(.58) saturate(.72);
+  transform: translateX(-50%) scale(.42);
+  transform-origin: 50% 50%;
+  transition:
+    left var(--ring-duration, 720ms) cubic-bezier(.16,.72,.24,1),
+    top var(--ring-duration, 720ms) cubic-bezier(.16,.72,.24,1),
+    transform var(--ring-duration, 720ms) cubic-bezier(.16,.72,.24,1),
+    opacity 520ms ease,
+    filter 520ms ease;
+  will-change: left, top, transform;
+}
+
+.mochi-portal-float[data-slot="far-left"] {
+  top: 72px;
+  left: 9%;
+  z-index: 4;
+  opacity: .5;
+  transform: translateX(-50%) scale(.4) rotate(8deg);
+}
+.mochi-portal-float[data-slot="left"] {
+  top: 112px;
+  left: 27%;
+  z-index: 6;
+  opacity: .76;
+  filter: brightness(.72) saturate(.82);
+  transform: translateX(-50%) scale(.6) rotate(4deg);
+}
+.mochi-portal-float[data-slot="front"] {
+  top: 104px;
+  left: 50%;
+  z-index: 10;
+  opacity: 1;
+  filter: none;
+  transform: translateX(-50%) scale(1);
+}
+.mochi-portal-float[data-slot="right"] {
+  top: 112px;
+  left: 73%;
+  z-index: 6;
+  opacity: .76;
+  filter: brightness(.72) saturate(.82);
+  transform: translateX(-50%) scale(.6) rotate(-4deg);
+}
+.mochi-portal-float[data-slot="far-right"] {
+  top: 72px;
+  left: 91%;
+  z-index: 4;
+  opacity: .5;
+  transform: translateX(-50%) scale(.4) rotate(-8deg);
+}
+
+/* 浮遊は外側、チルトはカード、表裏回転は内側、と層を分けてtransformの競合を防ぐ。
+   perspectiveはチルトの親であるこの層に置く（自要素には効かないため）。 */
+.mochi-portal-card-motion {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  perspective: 1000px;
+  filter: drop-shadow(0 28px 25px rgba(0,0,0,.38));
+  animation: portal-card-float 4.8s ease-in-out var(--float-delay, 0s) infinite;
+  will-change: transform;
+}
+
+/* 押下中は浮遊位置を固定し、長押しでカードの回転軸が漂わないようにする。 */
+.character-selector-stage.is-pointer-down .mochi-portal-float.is-active .mochi-portal-card-motion {
+  animation-play-state: paused;
+}
+
+.mochi-portal-float:not(.is-active) .mochi-portal-card-motion {
+  animation: portal-card-float 5.6s ease-in-out var(--float-delay, 0s) infinite;
+  filter: drop-shadow(0 14px 13px rgba(0,0,0,.28));
+}
+
+.mochi-portal-float:not(.is-active) .mochi-portal-floor-shadow { opacity: 0; }
+
+@keyframes portal-card-float {
+  0%, 100% { transform: translateY(-22px); }
+  50% { transform: translateY(-28px); }
+}
+
+.mochi-portal-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 720 / 1028;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  perspective: 1200px;
+  transform-origin: 50% 58%;
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 460ms cubic-bezier(.2,.85,.3,1), filter 240ms ease;
+  -webkit-touch-callout: none;
+}
+/* 追従中は短く、離した後は上の460msでゆっくり水平へ戻る。 */
+.mochi-portal-card.is-tilting { transition-duration: 70ms, 240ms; }
+.character-selector-stage.is-swiping .mochi-portal-card { cursor: grabbing; }
+.character-selector-stage.is-swiping .mochi-portal-float.is-active .mochi-portal-card {
+  transform: rotateZ(var(--swipe-tilt, 0deg));
+  transition-duration: 45ms;
+}
+.character-selector-stage.is-coasting .mochi-portal-float {
+  transition: none;
+}
+.character-selector-stage.is-coasting .mochi-portal-card-motion {
+  animation-play-state: paused;
+}
+
+.mochi-portal-card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 680ms cubic-bezier(.22,.76,.28,1);
+  will-change: transform;
+}
+
+.mochi-portal-card.is-flipped .mochi-portal-card-inner { transform: rotateY(180deg); }
+
+.mochi-portal-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.mochi-portal-face-back { transform: rotateY(180deg); }
+
+/* ホロの照り。白い反射がポインタ位置を追い、虹の帯が傾きに合わせて流れる。 */
+.mochi-portal-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 4% / 2.9%;
+  background:
+    radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%),
+      rgba(255,255,255,.68), rgba(255,255,255,.2) 34%, rgba(255,255,255,0) 58%),
+    linear-gradient(112deg,
+      transparent 30%,
+      rgba(137,174,246,.55) 42%,
+      rgba(245,207,115,.65) 50%,
+      rgba(255,243,189,.52) 57%,
+      transparent 70%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 240% 240%;
+  background-position: 0 0, var(--glare-x, 50%) var(--glare-y, 50%);
+  mix-blend-mode: overlay;
+  opacity: var(--glare-o, 0);
+  transition: opacity 320ms ease;
+  pointer-events: none;
+}
+.mochi-portal-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.mochi-portal-card:hover,
+.mochi-portal-card:focus-visible {
+  outline: none;
+  filter: brightness(1.035);
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(1.012);
+}
+.mochi-portal-card:focus-visible {
+  outline: none;
+  filter: brightness(1.05) drop-shadow(0 0 7px rgba(242,212,141,.72));
+}
+
+.mochi-portal-floor-shadow {
+  position: absolute;
+  left: 50%;
+  top: 430px;
+  z-index: 1;
+  width: 74%;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,8,.46);
+  filter: blur(11px);
+  opacity: .48;
+  transform: translateX(-50%) scale(.78);
+  pointer-events: none;
+}
+
+.mochi-portal-stage-link {
+  position: absolute;
+  top: 438px;
+  left: 50%;
+  z-index: 7;
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  margin-top: 0;
+  padding: 8px 19px;
+  border: 1px solid #f3d78f;
+  border-radius: 999px;
+  color: #172043;
+  background: linear-gradient(135deg, #f6dc99, #dba94b);
+  box-shadow: 0 10px 24px rgba(0,0,0,.26), 0 0 18px rgba(232,189,103,.16);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .035em;
+  text-decoration: none;
+  /* 絶対配置＋left:50%だと親の右半分の幅しか使えず、名前が長いと折り返すため。 */
+  white-space: nowrap;
+  transform: translateX(-50%);
+  transition: transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
+}
+.mochi-portal-stage-link[hidden] { display: none; }
+.mochi-portal-stage-link:hover,
+.mochi-portal-stage-link:focus-visible {
+  outline: none;
+  filter: brightness(1.06);
+  box-shadow: 0 13px 30px rgba(0,0,0,.3), 0 0 22px rgba(242,212,141,.28);
+  transform: translate(-50%, -2px);
+}
+.mochi-portal-stage-link:focus-visible {
+  outline: 2px solid #dce5ff;
+  outline-offset: 3px;
+}
+
+.portal-flip-particles {
+  position: absolute;
+  inset: -36px;
+  z-index: 5;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.character-ring-controls {
+  position: absolute;
+  top: 344px;
+  left: 50%;
+  z-index: 14;
+  display: flex;
+  justify-content: space-between;
+  width: min(96%, 835px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.character-ring-button {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  padding: 0 0 5px;
+  border: 1px solid rgba(232,189,103,.72);
+  border-radius: 50%;
+  color: #f5d884;
+  background: rgba(8,16,44,.82);
+  box-shadow: 0 10px 24px rgba(0,0,0,.28), 0 0 16px rgba(232,189,103,.1);
+  font-family: Georgia, serif;
+  font-size: 34px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+.character-ring-button:hover,
+.character-ring-button:focus-visible {
+  outline: none;
+  color: #fff4c4;
+  background: rgba(24,40,89,.94);
+  box-shadow: 0 12px 28px rgba(0,0,0,.32), 0 0 18px rgba(232,189,103,.23);
+  transform: scale(1.06);
+}
+.character-ring-button:focus-visible {
+  outline: 2px solid #dce5ff;
+  outline-offset: 3px;
+}
+.portal-flip-particle {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: var(--particle-size);
+  height: var(--particle-size);
+  border-radius: 50%;
+  background: var(--particle-color);
+  box-shadow: 0 0 10px var(--particle-color);
+  opacity: 0;
+  animation: portal-flip-burst 720ms cubic-bezier(.16,.7,.25,1) var(--particle-delay) forwards;
+}
+.portal-flip-particle.is-star { border-radius: 1px; }
+
+@keyframes portal-flip-burst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.25) rotate(0); }
+  16% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(.18) rotate(160deg);
+  }
+}
+
+.character-selector-detail {
+  display: block;
+  max-width: 760px;
+  margin: 18px auto 0;
+  padding: 0 10px;
+}
+.character-selector-detail-copy small {
+  display: block;
+  color: var(--portal-gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+.character-selector-detail-copy strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font-size: 20px;
+}
+.character-selector-detail-copy p {
+  margin: 3px 0 0;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+.character-selector-detail-copy .need {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 2px 11px;
+  border: 1px solid rgba(232,189,103,.4);
+  border-radius: 999px;
+  color: var(--portal-gold);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+
+/* カードの下に置く、文字だけの索引。カルーセルと同じメニューの別の姿。 */
+.portal-index {
+  max-width: 760px;
+  margin: 30px auto 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid rgba(174,189,255,.16);
+}
+.portal-index a {
+  display: grid;
+  grid-template-columns: 9.5em 1fr auto;
+  gap: 4px 16px;
+  align-items: baseline;
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(174,189,255,.16);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  text-decoration: none;
+  transition: background .18s ease;
+}
+.portal-index b {
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.portal-index small {
+  color: var(--portal-gold);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.portal-index a:hover,
+.portal-index a:focus-visible {
+  outline: none;
+  background: rgba(232,189,103,.07);
+}
+@media (max-width: 720px) {
+  .portal-index a { grid-template-columns: 1fr auto; }
+  .portal-index span { grid-column: 1 / -1; line-height: 1.7; }
+}
+.character-selector-fallback a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border: 1px solid var(--portal-gold);
+  border-radius: 999px;
+  color: #172043;
+  background: linear-gradient(135deg, #f2d48d, #d9aa4e);
+  box-shadow: 0 10px 24px rgba(232,189,103,.18);
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+.character-selector-fallback a:hover,
+.character-selector-fallback a:focus-visible {
+  box-shadow: 0 13px 30px rgba(232,189,103,.28);
+  outline: 2px solid #dce5ff;
+  outline-offset: 3px;
+}
+.character-selector-fallback { text-align: center; }
+
+@media (max-width: 720px) {
+  .character-portals { padding-inline: 0; }
+  .character-selector-stage { height: 570px; margin-top: 30px; margin-inline: -18px; overflow: hidden; }
+  .character-selector-stage::before { width: 160px; height: 96px; bottom: 48px; }
+  .character-selector-stage::after { width: 76%; bottom: 3px; }
+  .mochi-portal-float { width: min(276px, 72vw); height: 455px; }
+  .mochi-portal-float[data-slot="front"] { top: 96px; }
+  .mochi-portal-float[data-slot="far-left"] { top: 80px; left: 0%; transform: translateX(-50%) scale(.3) rotate(8deg); }
+  .mochi-portal-float[data-slot="left"] { top: 106px; left: 17%; transform: translateX(-50%) scale(.48) rotate(4deg); }
+  .mochi-portal-float[data-slot="right"] { top: 106px; left: 83%; transform: translateX(-50%) scale(.48) rotate(-4deg); }
+  .mochi-portal-float[data-slot="far-right"] { top: 80px; left: 100%; transform: translateX(-50%) scale(.3) rotate(-8deg); }
+  .mochi-portal-stage-link { top: 402px; white-space: nowrap; }
+  .mochi-portal-floor-shadow { top: 410px; }
+  .character-ring-controls { top: 330px; width: calc(100% - 28px); }
+  .character-ring-button { width: 42px; height: 42px; font-size: 31px; }
+  .character-selector-detail { margin: 20px 0 0; padding-inline: 0; }
+}
+
+@media (max-width: 390px) {
+  .character-portals-head > p:last-child { padding-inline: 10px; }
+  .character-selector-stage { height: 548px; }
+  .mochi-portal-float { width: min(264px, 72vw); }
+  .mochi-portal-stage-link { top: 385px; }
+  .mochi-portal-floor-shadow { top: 396px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mochi-portal-card-motion { animation: none !important; transform: translateY(-22px); }
+  .mochi-portal-float { transition-duration: .12s !important; }
+  .mochi-portal-card,
+  .mochi-portal-card-inner { transition-duration: .12s !important; }
+  .portal-flip-particle { animation: none !important; }
+  .mochi-portal-face::after { display: none; }
+  .mochi-portal-card:hover,
+  .mochi-portal-card:focus-visible { transform: none; }
+}

@@ -1,0 +1,262 @@
+/* ランダムゲストと星雫再プレイの外観。
+   庭(#pixelWorld)の座標系に乗る。レイヤーは L5=ゲスト(z8) / L6=吹き出し(z10) */
+
+/* ---- ゲスト本体 ---- */
+.hero-guest {
+  position: absolute;
+  bottom: 36px;
+  z-index: 8;
+  width: 120px;
+  height: 130px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 9px 5px rgba(48, 69, 46, .2));
+  transition: opacity .5s ease, transform .5s ease;
+}
+.hero-guest:focus-visible {
+  outline: 3px solid #8b6a3f;
+  outline-offset: 5px;
+  border-radius: 18px;
+}
+.hero-guest-sprite {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform: translateX(-50%) scale(1.22);
+  transform-origin: center bottom;
+}
+.hero-guest.is-entering {
+  animation: hero-guest-enter .8s ease-out;
+}
+.hero-guest.is-exiting {
+  opacity: 0;
+  transform: translateY(10px) scale(.92);
+  pointer-events: none;
+}
+@keyframes hero-guest-enter {
+  0% { opacity: 0; transform: translateY(16px) scale(.85); }
+  60% { opacity: 1; transform: translateY(-4px) scale(1.02); }
+  100% { transform: none; }
+}
+
+/* 夜はCSSだけで沈める。画像は増やさない */
+.pixel-world.is-night .hero-guest {
+  filter: drop-shadow(0 9px 5px rgba(18, 28, 52, .45)) brightness(.9);
+}
+
+/* ---- キャラ別の登場アクセント(1回きり・0.4〜0.9s) ---- */
+.hero-guest-fx {
+  position: absolute;
+  inset: -22px -18px 0;
+  pointer-events: none;
+}
+.hero-guest.is-entering .hero-guest-fx::before,
+.hero-guest.is-entering .hero-guest-fx::after {
+  content: "";
+  position: absolute;
+}
+/* 夜空スラ: 星座線が1本つながる */
+.hero-guest[data-char="night"].is-entering .hero-guest-fx::before {
+  top: 6px; left: 8%;
+  height: 2px; width: 0;
+  background: linear-gradient(90deg, rgba(178, 207, 255, 0), #b2cfff 30%, #e5b86f 100%);
+  transform: rotate(-14deg);
+  animation: fx-night-line .8s ease-out forwards;
+}
+@keyframes fx-night-line {
+  40% { width: 84%; opacity: 1; }
+  100% { width: 84%; opacity: 0; }
+}
+/* お金スラ: 金色の粒が1周だけ回る */
+.hero-guest[data-char="money"].is-entering .hero-guest-fx::before {
+  top: 42%; left: 50%;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #e5b86f;
+  box-shadow: 0 0 8px rgba(229, 184, 111, .8);
+  animation: fx-money-orbit .9s ease-in-out forwards;
+}
+@keyframes fx-money-orbit {
+  0%   { transform: rotate(0turn) translateX(52px); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: rotate(1turn) translateX(52px); opacity: 0; }
+}
+/* 相性スラ: 2つの光が中央で重なる */
+.hero-guest[data-char="compatibility"].is-entering .hero-guest-fx::before,
+.hero-guest[data-char="compatibility"].is-entering .hero-guest-fx::after {
+  top: 30%;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  filter: blur(4px);
+  animation: fx-aisho-meet .7s ease-out forwards;
+}
+.hero-guest[data-char="compatibility"].is-entering .hero-guest-fx::before { left: -6px; background: rgba(243, 184, 204, .85); }
+.hero-guest[data-char="compatibility"].is-entering .hero-guest-fx::after { right: -6px; background: rgba(201, 168, 232, .85); --fx-dir: -1; }
+@keyframes fx-aisho-meet {
+  0%   { transform: translateX(0); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateX(calc(46px * var(--fx-dir, 1))); opacity: 0; }
+}
+/* 毒舌スラ: 紫の稲妻が短く走る */
+.hero-guest[data-char="dokuzetsu"].is-entering .hero-guest-fx::before {
+  top: -2px; left: 50%;
+  width: 16px; height: 40px;
+  background: linear-gradient(180deg, #9a7ce8, #4a6ae8);
+  clip-path: polygon(58% 0, 22% 46%, 48% 46%, 30% 100%, 78% 40%, 52% 40%, 88% 0);
+  animation: fx-dokuzetsu-bolt .45s steps(2, end) forwards;
+}
+@keyframes fx-dokuzetsu-bolt {
+  0% { opacity: 0; transform: translateY(-6px); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(2px); }
+}
+/* カードスラ: カードが1枚だけ浮く */
+.hero-guest[data-char="oracle"].is-entering .hero-guest-fx::before {
+  top: 4px; left: 58%;
+  width: 20px; height: 28px;
+  border-radius: 3px;
+  background: linear-gradient(150deg, #2f7d6d, #17493f);
+  border: 1px solid rgba(229, 184, 111, .7);
+  animation: fx-oracle-card .9s ease-out forwards;
+}
+@keyframes fx-oracle-card {
+  0%   { opacity: 0; transform: translateY(10px) rotateY(0); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-14px) rotateY(180deg); }
+}
+
+/* ---- 吹き出し ---- */
+.hero-guest-bubble {
+  position: absolute;
+  top: 14px;
+  z-index: 10;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 2px solid rgba(79, 112, 76, .3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .92);
+  color: #3c5138;
+  text-align: left;
+  box-shadow: 0 10px 24px rgba(48, 69, 46, .18);
+}
+.pixel-world.is-night .hero-guest-bubble {
+  border-color: rgba(190, 211, 228, .3);
+  background: rgba(28, 42, 71, .92);
+  color: #eff3dc;
+}
+.hero-guest-bubble small {
+  font-size: 10px;
+  letter-spacing: .08em;
+  opacity: .75;
+}
+.hero-guest-bubble strong {
+  font-size: 15px;
+}
+.hero-guest-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 2px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #e5b86f, #c99a4e);
+  color: #2c2313;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+}
+.hero-guest-cta:focus-visible {
+  outline: 3px solid #7d613d;
+  outline-offset: 3px;
+}
+.hero-guest-later {
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 12px;
+  opacity: .72;
+  cursor: pointer;
+  text-decoration: underline;
+}
+/* 吹き出し表示中は上中央のメッセージを一時的に沈める */
+.pixel-world.has-guest-bubble .hero-message { opacity: 0; }
+.hero-guest-bubble-accent { display: none; }
+
+/* ---- 星雫の再プレイ ---- */
+.stardrop-replay {
+  position: absolute;
+  /* 鉢植え(right:4.5%, 最大158px)のタップ領域と重ねない */
+  right: calc(4.5% + 174px);
+  bottom: 12px;
+  z-index: 9;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(229, 184, 111, .5);
+  border-radius: 50%;
+  background: rgba(28, 42, 71, .55);
+  color: #f3ddae;
+  font-size: 17px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .3s ease, box-shadow .3s ease;
+}
+.stardrop-replay:hover,
+.stardrop-replay:focus-visible {
+  background: rgba(28, 42, 71, .8);
+  box-shadow: 0 0 14px rgba(229, 184, 111, .3);
+}
+.stardrop-replay:focus-visible {
+  outline: 3px solid #e5b86f;
+  outline-offset: 3px;
+}
+.stardrop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  border-radius: 26px;
+  background: rgba(13, 18, 48, .58);
+  backdrop-filter: blur(2px);
+}
+.stardrop-overlay-note {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(28, 42, 71, .8);
+  color: #dfe6ff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ベースPetのスプライトが読めなかったときの静止画モード */
+html.hero-static .pet-actor { display: none; }
+
+/* ---- reduced-motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .hero-guest.is-entering { animation: none; }
+  .hero-guest.is-entering .hero-guest-fx::before,
+  .hero-guest.is-entering .hero-guest-fx::after { animation: none; content: none; }
+  .hero-guest,
+  .hero-guest.is-exiting { transition: opacity .2s ease; transform: none; }
+}
+
+@media (max-width: 760px) {
+  .hero-guest { width: 104px; height: 116px; }
+  .hero-guest-sprite { transform: translateX(-50%) scale(1.05); }
+  /* 鉢植え(right:1%, 108px)のタップ領域と重ねない */
+  .stardrop-replay { right: calc(1% + 118px); bottom: 10px; }
+}

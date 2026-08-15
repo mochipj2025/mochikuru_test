@@ -1,0 +1,52 @@
+{
+  "version": "20260814-star1",
+  "cell": { "w": 96, "h": 104 },
+  "anims": {
+    "idle":     { "row": 0, "col": 0, "frames": 6, "fps": 8 },
+    "walk":     { "row": 1, "col": 0, "frames": 8, "fps": 10 },
+    "greeting": { "row": 2, "col": 0, "frames": 4, "fps": 7 },
+    "surprise": { "row": 2, "col": 4, "frames": 4, "fps": 9 }
+  },
+  "characters": {
+    "night": {
+      "sheet": "yozora-idle-walk.webp",
+      "title": "夜空スラ",
+      "topic": "暦と十二の景色",
+      "href": "slime/index.html",
+      "cta": "十二の景色へ",
+      "spot": 24
+    },
+    "money": {
+      "sheet": "okane-idle-walk.webp",
+      "title": "お金スラ",
+      "topic": "お金と価値観のバランス",
+      "href": "money/index.html",
+      "cta": "お金の診断へ",
+      "spot": 46
+    },
+    "compatibility": {
+      "sheet": "aisho-idle-walk.webp",
+      "title": "相性スラ",
+      "topic": "人と人のつながり",
+      "href": "aishou/index.html",
+      "cta": "相性を読む",
+      "spot": 38
+    },
+    "dokuzetsu": {
+      "sheet": "dokuzetsu-idle-walk.webp",
+      "title": "毒舌スラ",
+      "topic": "星読みをズバッと",
+      "href": "hoshiyomi/index.html",
+      "cta": "ズバッと読む",
+      "spot": 66
+    },
+    "oracle": {
+      "sheet": "card-idle-walk.webp",
+      "title": "カードスラ",
+      "topic": "もちくる36枚の案内役",
+      "href": "oracle/index.html",
+      "cta": "一枚引く",
+      "spot": 56
+    }
+  }
+}

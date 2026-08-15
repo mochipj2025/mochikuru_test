@@ -1,0 +1,101 @@
+/* ロード画面「星雫あつめ」の外観。
+   ローダーの骨格(位置・背景・進捗バー)は index.html のインラインCSSが先に効かせる。
+   ここでは星雫・門の呼吸・入場ボタンなど、初回描画に不要な装飾を持つ。 */
+
+.loader-gate {
+  animation: loader-gate-breathe 4.2s ease-in-out infinite;
+}
+@keyframes loader-gate-breathe {
+  0%, 100% { transform: scale(1); opacity: .92; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+/* ---- 星雫 ---- */
+.loader-drops {
+  position: relative;
+  width: min(340px, 82vw);
+  height: 118px;
+}
+.stardrop {
+  position: absolute;
+  left: var(--drop-x, 50%);
+  top: var(--drop-y, 50%);
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fdf6df;
+  font-size: 19px;
+  line-height: 1;
+  background:
+    radial-gradient(circle at 34% 30%, var(--drop-c2, #e5b86f), transparent 58%),
+    radial-gradient(circle at 60% 62%, var(--drop-c1, #25316e), rgba(20, 26, 64, .55) 78%);
+  box-shadow: 0 0 14px rgba(190, 205, 255, .28);
+  -webkit-tap-highlight-color: transparent;
+  animation: stardrop-drift var(--drop-dur, 14s) ease-in-out var(--drop-delay, 0s) infinite alternate;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.stardrop:focus-visible {
+  outline: 3px solid #e5b86f;
+  outline-offset: 3px;
+}
+.stardrop.is-collected {
+  transform: translate(var(--drop-gather-x, 0px), var(--drop-gather-y, -60px)) scale(.15);
+  opacity: 0;
+  pointer-events: none;
+}
+@keyframes stardrop-drift {
+  0%   { translate: 0 0; }
+  33%  { translate: var(--drop-sway, 16px) -10px; }
+  66%  { translate: calc(var(--drop-sway, 16px) * -.7) 8px; }
+  100% { translate: 0 -6px; }
+}
+
+/* ---- 集計と入場 ---- */
+.loader-count {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 12px;
+  color: #b9c6ef;
+}
+.loader-enter {
+  min-width: 168px;
+  min-height: 44px;
+  padding: 10px 26px;
+  border: 1px solid rgba(160, 178, 236, .34);
+  border-radius: 999px;
+  background: rgba(38, 46, 96, .5);
+  color: #93a2d4;
+  font-size: 14px;
+  letter-spacing: .12em;
+  cursor: default;
+  transition: background .35s ease, color .35s ease, border-color .35s ease, box-shadow .35s ease;
+}
+.loader-enter.is-ready {
+  border-color: rgba(229, 184, 111, .8);
+  background: linear-gradient(160deg, rgba(229, 184, 111, .24), rgba(229, 184, 111, .08));
+  color: #f3ddae;
+  box-shadow: 0 0 18px rgba(229, 184, 111, .22);
+  cursor: pointer;
+}
+.loader-enter.is-ready:focus-visible {
+  outline: 3px solid #e5b86f;
+  outline-offset: 3px;
+}
+
+/* 退出時に星雫が庭へ落ちる名残 */
+#mochisuraLoader.is-exit .loader-gate {
+  animation: none;
+  transform: scale(1.35);
+  opacity: 0;
+  transition: transform .6s ease, opacity .6s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-gate { animation: none; }
+  .stardrop { animation: none; transition: opacity .2s ease; }
+  .stardrop.is-collected { transform: none; }
+  #mochisuraLoader.is-exit .loader-gate { transform: none; transition: opacity .2s ease; }
+}

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>もちスラ — 生年月日ひとつ。点はつけません。</title>
+<meta name="description" content="生年月日ひとつで読む、五つの診断と36枚のオラクル。性格・お金・相性・星読み。点数はつけず、使った暦も隠しません。入力はこの画面から出ません。">
+<style>
+/* ローダーの骨格。外部CSSを待たずに効かせる */
+#mochisuraLoader{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;background:linear-gradient(178deg,#0d1230 0%,#1a1c4a 46%,#173c4a 100%);color:#dfe6ff;font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;text-align:center;transition:opacity .55s ease}
+#mochisuraLoader.is-exit{opacity:0;pointer-events:none}
+html.mochisura-loading{overflow:hidden}
+.loader-kicker{margin:0;font-size:12px;letter-spacing:.42em;color:#9fb0e8}
+.loader-gate{position:relative;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 50% 42%,rgba(229,184,111,.5),rgba(120,140,255,.22) 46%,rgba(20,26,64,0) 72%)}
+.loader-gate::after{content:"";position:absolute;inset:30px;border-radius:46% 54% 52% 48%/58% 56% 44% 42%;background:rgba(190,205,255,.24);filter:blur(1px)}
+.loader-progress-text{margin:0;font-size:12px;color:#c6d2f5}
+.loader-bar{width:min(300px,70vw);height:6px;border-radius:3px;background:rgba(160,178,236,.2);overflow:hidden}
+.loader-bar i{display:block;height:100%;width:12%;border-radius:3px;background:linear-gradient(90deg,#8ea4ee,#e5b86f);transition:width .3s ease}
+.loader-bar.is-indeterminate i{animation:loaderSlide 1.5s ease-in-out infinite}
+@keyframes loaderSlide{0%{margin-left:0}50%{margin-left:88%}100%{margin-left:0}}
+.loader-enter{min-width:168px;min-height:44px;padding:10px 26px;border:1px solid rgba(160,178,236,.34);border-radius:999px;background:rgba(38,46,96,.5);color:#93a2d4;font-size:14px;letter-spacing:.12em}
+@media (prefers-reduced-motion:reduce){.loader-bar.is-indeterminate i{animation:none;width:30%}}
+</style>
+<link rel="stylesheet" href="assets/site.css?v=20260814-star2">
+<link rel="stylesheet" href="assets/galaxy.css?v=20260815-unbox2">
+<link rel="stylesheet" href="assets/character-selector.css?v=20260813-menu1">
+<link rel="stylesheet" href="assets/loading-experience.css?v=20260814-star1">
+<link rel="stylesheet" href="assets/hero-experience.css?v=20260814-star2">
+<script src="assets/galaxy.js?v=20260815-clock1" defer></script>
+<script src="assets/site-motion.js?v=20260814-star1" defer></script>
+<script src="assets/character-selector.js?v=20260814-star1" defer></script>
+<script src="assets/loading-experience.js?v=20260814-star1" defer></script>
+<script type="module" src="assets/hero-experience.js?v=20260814-star1"></script>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#fbf8f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1a18" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="もちスラ">
+<meta property="og:title" content="もちスラ">
+<meta property="og:description" content="生年月日ひとつで読む、五つの診断と、オラクルカード「もちくる」36枚。点数はつけず、使った暦も隠しません。">
+<meta property="og:image" content="https://www.mochisura-lab.com/assets/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:url" content="https://www.mochisura-lab.com/">
+<link rel="canonical" href="https://www.mochisura-lab.com/">
+</head>
+<body>
+<div id="mochisuraLoader" role="region" aria-label="読み込み画面">
+  <p class="loader-kicker">MOCHISURA</p>
+  <span class="loader-gate" aria-hidden="true"></span>
+  <div class="loader-drops" id="loaderDrops"></div>
+  <p class="loader-count" id="loaderCount" aria-live="polite"></p>
+  <p class="loader-progress-text" id="loaderText">庭をひらいています…</p>
+  <div class="loader-bar is-indeterminate" id="loaderBar" role="progressbar" aria-label="読み込みの進み具合" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="loaderFill"></i></div>
+  <button type="button" class="loader-enter" id="loaderEnter" aria-disabled="true">庭へ入る</button>
+</div>
+<noscript><style>#mochisuraLoader{display:none}</style></noscript>
+<script>
+/* 起動時刻の記録と、JSが途中で死んでも4sで必ず抜ける保険 */
+window.__mochisuraBoot = { start: performance.now() };
+document.documentElement.classList.add('mochisura-loading');
+window.__mochisuraBoot.failsafe = setTimeout(function () {
+  var loaderEl = document.getElementById('mochisuraLoader');
+  document.documentElement.classList.remove('mochisura-loading');
+  if (loaderEl && !loaderEl.dataset.exited) {
+    loaderEl.dataset.exited = 'forced';
+    loaderEl.classList.add('is-exit');
+    setTimeout(function () { loaderEl.remove(); }, 600);
+  }
+}, 4000);
+</script>
+<div class="ambient" aria-hidden="true">
+  <span class="ambient-glow glow-a"></span>
+  <span class="ambient-glow glow-b"></span>
+  <span class="ambient-orbit orbit-a"><i></i></span>
+  <span class="ambient-orbit orbit-b"><i></i></span>
+  <span class="ambient-moon"></span>
+  <span class="pointer-halo"></span>
+  <span class="stardust-field"></span>
+</div>
+<div class="wrap">
+
+  <nav class="site-nav" aria-label="メインナビゲーション">
+    <a class="brand" href="index.html" aria-label="もちスラ ホーム">
+      <span class="brand-orb" aria-hidden="true"></span>
+      <span>もちスラ</span>
+    </a>
+    <div class="nav-links">
+      <a href="#garden">庭</a>
+      <a href="#diagnosis">診断</a>
+      <a href="#stories">星と暦</a>
+      <a href="me/index.html">マイページ</a>
+    </div>
+  </nav>
+
+  <header class="top pixel-hero" id="garden">
+    <div class="hero-copy">
+      <p class="hero-kicker">MOCHISURA</p>
+      <h1>もちスラ</h1>
+      <p class="hero-lead">生年月日ひとつ。<br class="mobile-break">点はつけません。</p>
+      <p class="sub">聞くのは生年月日だけ。入力はこの画面から出ません。</p>
+      <div class="hero-actions">
+        <a class="hero-action primary" href="#diagnosis">カードを選びに行く</a>
+      </div>
+    </div>
+    <div class="pixel-world" id="pixelWorld" aria-label="もちスラたちが暮らす小さな庭">
+      <button class="pixel-sun" id="timeToggle" type="button" aria-label="夜の庭に切り替える"></button>
+      <span class="pixel-night-stars" id="nightStars" aria-hidden="true"></span>
+      <span class="pixel-cloud cloud-one" aria-hidden="true"></span>
+      <span class="pixel-cloud cloud-two" aria-hidden="true"></span>
+      <span class="pixel-hill hill-one" aria-hidden="true"></span>
+      <span class="pixel-hill hill-two" aria-hidden="true"></span>
+      <span class="pixel-ground" aria-hidden="true"></span>
+      <span class="pixel-flower flower-one" aria-hidden="true"></span>
+      <span class="pixel-flower flower-two" aria-hidden="true"></span>
+
+      <button class="pet-actor" id="petActor" type="button" aria-label="歩いているもちスラPetをなでる">
+        <span class="pet-sprite" id="petSprite" aria-hidden="true"></span>
+      </button>
+
+      <button class="pot-actor" id="potActor" type="button" aria-label="鉢植えもちスラをつつく">
+        <img id="potSlime" src="slime/images_pixel/me.png" alt="芽が生えた鉢植えもちスラ">
+      </button>
+
+      <span class="hero-message" id="heroMessage" role="status" aria-live="polite">庭をタップすると、もちスラが来るよ</span>
+    </div>
+  </header>
+
+  <section class="character-portals home-section" id="diagnosis" aria-labelledby="character-portals-title">
+    <header class="character-portals-head">
+      <h2 id="character-portals-title">今日は、どのもちスラに会う？</h2>
+      <p>左右にスワイプして巡り、手前のカードをタップすると裏返ります。この五枚が、そのまま入口です。</p>
+    </header>
+
+    <div
+      class="character-selector-stage"
+      id="characterSelectorStage"
+      role="region"
+      aria-roledescription="カルーセル"
+      aria-label="もちスラを選ぶ"
+    ></div>
+
+    <div class="character-selector-detail" id="characterSelectorDetail" aria-live="polite"></div>
+
+    <ul class="portal-index" aria-label="診断ともちくるの一覧">
+      <li><a href="slime/index.html"><b>十二景診断</b><span>あなたはどういう人か。四つに絞って言い切ります。</span><small>生年月日だけ</small></a></li>
+      <li><a href="money/index.html"><b>お金の診断</b><span>大事だと思っているものと、実際に払っているもののズレ。</span><small>生年月日＋七つへの配点</small></a></li>
+      <li><a href="aishou/index.html"><b>相性を読む</b><span>相手があなたに与えるものと、あなたが相手に与えるものは違います。</span><small>生年月日ふたつ</small></a></li>
+      <li><a href="hoshiyomi/index.html"><b>星読み毒舌診断</b><span>全部出します。なぜそう出たのかまで見せます。</span><small>生年月日・時刻・場所</small></a></li>
+      <li><a href="oracle/index.html"><b>もちくる</b><span>景・心・導の36枚を切って一枚。正位置と逆位置で読みが変わります。</span><small>入力なし・36枚</small></a></li>
+    </ul>
+
+    <aside class="method-trust-panel" aria-labelledby="method-trust-title">
+      <span class="method-trust-visual" aria-hidden="true">
+        <img src="assets/story-links/east-west-celestial-method.webp" alt="" width="960" height="480" loading="lazy">
+      </span>
+      <span class="method-trust-copy">
+        <small>ONE SKY, MANY WAYS TO READ</small>
+        <strong id="method-trust-title">占術が違っても、変わるのは<br><em>「どの問いに答えるか」</em></strong>
+        <span>西洋のホロスコープと、東洋の四柱推命・宿曜・九星気学・紫微斗数。それぞれの得意な問いに合わせて読み解きます。</span>
+        <b class="method-trust-private"><span aria-hidden="true">✓</span> 入力内容は外部へ送信されず、この画面の中だけで計算されます</b>
+      </span>
+    </aside>
+  </section>
+
+  <section class="minor home-section" id="stories" aria-labelledby="stories-title">
+    <div class="section-head compact">
+      <div>
+        <h2 id="stories-title">星と暦を読む</h2>
+      </div>
+    </div>
+    <div class="story-link-grid">
+      <a class="story-link-card story-link-year" href="hoshiyomi/2026/index.html">
+        <span class="story-link-visual" aria-hidden="true"><img src="assets/story-links/year-2026-dokuzetsu.webp" alt="" width="720" height="360" loading="lazy"><span class="story-link-sheen"></span></span>
+        <span class="story-link-copy"><small>YEARLY FORECAST</small><strong>2026年の毒舌運勢</strong><span>星座を選ぶだけ。12星座別の一年。</span><b>一年をズバッと読む →</b></span>
+      </a>
+      <a class="story-link-card story-link-calendar" href="hoshiyomi/shikumi/index.html">
+        <span class="story-link-visual" aria-hidden="true"><img src="assets/story-links/calendar-mechanism.webp" alt="" width="720" height="360" loading="lazy"><span class="story-link-sheen"></span></span>
+        <span class="story-link-copy"><small>SKY &amp; CALENDAR</small><strong>そらと暦のしくみ</strong><span>入力は要りません。なぜそう計算されるのかの解説。</span><b>天球のしくみを見る →</b></span>
+      </a>
+      <a class="story-link-card story-link-compatibility" href="hoshiyomi/aishou/index.html">
+        <span class="story-link-visual" aria-hidden="true"><img src="assets/story-links/detailed-compatibility.webp" alt="" width="720" height="360" loading="lazy"><span class="story-link-sheen"></span></span>
+        <span class="story-link-copy"><small>DEEP CONNECTIONS</small><strong>もっと詳しい相性</strong><span>西洋のシナストリー、宿曜の三九の秘法、四柱推命の日柱。時刻と場所も入れられます。</span><b>ふたりの軌道を読む →</b></span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="footer-brand"><span class="brand-orb" aria-hidden="true"></span><b>もちスラ</b></div>
+    <p>生年月日ひとつ。点はつけません。</p>
+    <p>
+      天体の位置は astronomy-engine（MIT License, Don Cross）で計算しています。
+      東洋の節気は太陽黄経が15度の倍数になる瞬間を直接求めており、節入り表は使っていません。
+    </p>
+    <p>
+      占いは、自分を眺めるための道具です。医療・法律・お金の判断の代わりにはなりません。
+      書いてあることが当たっていないと感じたら、そちらが正しいと思ってください。
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

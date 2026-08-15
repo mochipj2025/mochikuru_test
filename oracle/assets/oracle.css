@@ -1,0 +1,394 @@
+/* もちオラクル — 卓とカード */
+
+:root {
+  --o-bg: #14121b;
+  --o-panel: #1e1b28;
+  --o-ink: #f0ead9;
+  --o-soft: #a89ec0;
+  --o-line: #322c42;
+  --o-gold: #e8bd67; /* トップの --portal-gold と同値。サイト共通の金 */
+  --o-scene: #7f9fd4;
+  --o-heart: #dda3bb;
+  --o-guide: #86bb9c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  /* 部屋の空気。上からランプの余光、壁には星の粒(2種のタイルで疎らに)。
+     星は点のまま、卓の布より必ず静かにする */
+  background-color: var(--o-bg);
+  background-image:
+    radial-gradient(circle at 50% -4%, rgba(232,189,103,.09) 0, transparent 46%),
+    radial-gradient(circle at 50% 8%, #2b2540 0, transparent 55%),
+    radial-gradient(circle at 12% 82%, #21273b 0, transparent 48%),
+    radial-gradient(circle at 21% 33%, rgba(223,230,255,.52) 0 1px, transparent 2.2px),
+    radial-gradient(circle at 67% 12%, rgba(223,230,255,.38) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 61%, rgba(223,230,255,.46) 0 1px, transparent 2.2px),
+    radial-gradient(circle at 38% 79%, rgba(223,230,255,.32) 0 1px, transparent 2px),
+    radial-gradient(circle at 9% 54%, rgba(223,230,255,.4) 0 1px, transparent 2px),
+    radial-gradient(circle at 47% 6%, rgba(240,244,255,.55) 0 1.4px, transparent 2.8px),
+    radial-gradient(circle at 55% 44%, rgba(232,189,103,.34) 0 1.2px, transparent 2.4px),
+    radial-gradient(circle at 91% 27%, rgba(232,189,103,.26) 0 1px, transparent 2.2px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    620px 480px,
+    620px 480px,
+    620px 480px,
+    620px 480px,
+    620px 480px,
+    860px 640px,
+    980px 740px,
+    980px 740px;
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat;
+  color: var(--o-ink);
+  font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.9;
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 袖の広い幅では、部屋そのもの(左に棚と蝋燭、右に月の吊り飾り)を壁に敷く。
+   中央は画像側を無地にしてあるので、本文の可読性は変わらない */
+@media (min-width: 960px) {
+  body {
+    background-image:
+      radial-gradient(circle at 50% -4%, rgba(232,189,103,.09) 0, transparent 46%),
+      radial-gradient(circle at 21% 33%, rgba(223,230,255,.4) 0 1px, transparent 2px),
+      radial-gradient(circle at 84% 61%, rgba(223,230,255,.34) 0 1px, transparent 2px),
+      radial-gradient(circle at 55% 44%, rgba(232,189,103,.26) 0 1px, transparent 2.2px),
+      url("room-ambience.webp");
+    background-size: 100% 100%, 620px 480px, 620px 480px, 980px 740px, cover;
+    background-repeat: no-repeat, repeat, repeat, repeat, no-repeat;
+    background-position: center top, 0 0, 0 0, 0 0, center top;
+    background-attachment: fixed;
+  }
+}
+
+/* ---------- 部屋の照明 ----------
+   部屋の暗さは秘密めかすためではなく、カードに集中するための照明。
+   常時のヴィネット（after）と、カードが開いたときだけ深くなる層（before）の二枚。 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 32%, transparent 52%, rgba(8,6,14,.42) 100%);
+  pointer-events: none;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(105% 80% at 50% 34%, transparent 42%, rgba(6,4,12,.52) 94%);
+  opacity: 0;
+  transition: opacity .9s ease .15s;
+  pointer-events: none;
+}
+body:has(.drawn.is-open)::before { opacity: 1; }
+
+.wrap { max-width: 760px; margin: 0 auto; padding: 22px 18px 70px; }
+
+.nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; font-size: 14px; }
+.nav a { color: var(--o-soft); text-decoration: none; }
+.nav a:hover { color: var(--o-ink); }
+
+.top { text-align: center; margin-bottom: 8px; }
+.kicker { margin: 0 0 4px; font-size: 11px; letter-spacing: .26em; color: var(--o-gold); }
+.top h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: .1em; font-weight: 600; }
+.top p { margin: 0; color: var(--o-soft); font-size: 14px; }
+
+.legend { display: flex; gap: 10px; justify-content: center; margin: 16px 0 26px; flex-wrap: wrap; font-size: 12px; }
+.legend span { border: 1px solid var(--o-line); border-radius: 999px; padding: 4px 13px; color: var(--o-soft); }
+.legend b { color: var(--o-ink); font-weight: 600; margin-right: 5px; }
+
+/* ---------- 卓 ---------- */
+
+.table {
+  position: relative;
+  border: 1px solid var(--o-line);
+  border-radius: 22px;
+  /* 布張りの卓。上に薄く暗幕をかけて、文字とカードの対比を保つ */
+  background:
+    linear-gradient(180deg, rgba(30,25,44,.42), rgba(18,15,28,.58)),
+    url("table-cloth.webp") center / cover no-repeat,
+    linear-gradient(180deg, rgba(46,39,64,.62), rgba(24,21,34,.62));
+  padding: 26px 18px 22px;
+  overflow: hidden;
+}
+/* 卓上のランプの光だまり。カードが開いたら少しだけ強くなる。 */
+.table::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 34%, rgba(232,189,103,.16) 0, transparent 62%);
+  opacity: .72;
+  transition: opacity .9s ease .15s;
+  pointer-events: none;
+}
+body:has(.drawn.is-open) .table::after { opacity: 1; }
+
+/* 部屋の窓。外にはトップページと同じ星空が見えている。 */
+.room-window {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  width: 66px;
+  height: 96px;
+  border: 2px solid rgba(232,189,103,.34);
+  border-radius: 999px 999px 9px 9px;
+  background:
+    radial-gradient(circle at 76% 22%, #1d2647 0 6.5%, rgba(29,38,71,0) 9%),
+    radial-gradient(circle at 68% 24%, rgba(240,238,222,.95) 0 7%, rgba(240,238,222,0) 10%),
+    radial-gradient(circle at 24% 40%, #dce8ff 0 1.2px, transparent 2.2px),
+    radial-gradient(circle at 56% 64%, #fff3bd 0 1px, transparent 2px),
+    radial-gradient(circle at 40% 16%, #dce8ff 0 1px, transparent 1.9px),
+    radial-gradient(circle at 76% 78%, #dce8ff 0 1.1px, transparent 2px),
+    linear-gradient(180deg, #171f3a, #222b50 58%, #2b3157);
+  box-shadow: inset 0 0 16px rgba(8,10,24,.65), 0 0 20px rgba(137,174,246,.09);
+  pointer-events: none;
+}
+.room-window::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(232,189,103,.3), rgba(232,189,103,.3)) 50% 0 / 2px 100% no-repeat,
+    linear-gradient(rgba(232,189,103,.3), rgba(232,189,103,.3)) 0 58% / 100% 2px no-repeat;
+}
+@media (max-width: 430px) {
+  .room-window { width: 54px; height: 80px; top: 16px; right: 14px; }
+}
+
+.stage { position: relative; height: 330px; display: flex; align-items: center; justify-content: center; }
+
+/* 山札 */
+.deck { position: absolute; top: 50%; left: 50%; width: 148px; height: 222px; translate: -50% -50%; }
+.deck i {
+  position: absolute; inset: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(232,189,103,.34);
+  background: #241f36 url("../../assets/link-characters/mochisura-card-back.webp") center / cover no-repeat;
+  box-shadow: 0 10px 22px rgba(0,0,0,.42);
+  translate: calc(var(--dx, 0) * 1px) calc(var(--n) * -2px + var(--dy, 0) * 1px);
+  rotate: calc(var(--dr, 0) * 1deg);
+  transition: translate .22s ease, rotate .22s ease;
+}
+.deck.is-empty { opacity: .18; }
+
+/* 引いたカード */
+.drawn {
+  position: absolute; top: 50%; left: 50%;
+  width: 148px; height: 222px;
+  translate: -50% -50%;
+  transform-style: preserve-3d;
+  transition: translate .42s cubic-bezier(.22,.9,.3,1.2), rotate .42s ease, scale .42s ease;
+  opacity: 0; pointer-events: none;
+}
+.drawn.is-live { opacity: 1; }
+.drawn.is-lift { translate: -50% -170%; scale: 1.05; rotate: -6deg; }
+.drawn.is-land { translate: -50% -50%; scale: 1.32; rotate: 0deg; }
+.drawn.is-land.is-reversed { rotate: 180deg; }
+
+.face {
+  position: absolute; inset: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  transition: rotate .5s cubic-bezier(.4,.1,.3,1);
+  transform-style: preserve-3d;
+}
+.face.back {
+  border: 1px solid rgba(232,189,103,.4);
+  background: #241f36 url("../../assets/link-characters/mochisura-card-back.webp") center / cover no-repeat;
+}
+.face.front { rotate: y 180deg; border: 1px solid rgba(232,189,103,.55); background: #100e18; }
+.face.front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.drawn.is-open .face.back { rotate: y 180deg; }
+.drawn.is-open .face.front { rotate: y 0deg; }
+
+.rev-flag {
+  position: absolute; left: 50%; top: -30px; translate: -50% 0;
+  font-size: 11px; letter-spacing: .18em; color: var(--o-gold);
+  border: 1px solid rgba(232,189,103,.42); border-radius: 999px; padding: 2px 12px;
+  background: rgba(20,18,27,.8); white-space: nowrap; opacity: 0; transition: opacity .3s ease .35s;
+}
+.drawn.is-open .rev-flag { opacity: 1; }
+/* バッジは正逆どちらもカード上側の空き地に出す（下側は引き方ボタンと重なる）。
+   逆位置はカードごと180度回るため、ローカルでは下側に付け替えたうえで
+   自身をもう180度回して文字を正立に戻す。 */
+.drawn.is-land.is-reversed .rev-flag {
+  top: auto;
+  bottom: -30px;
+  rotate: 180deg;
+}
+
+/* ---------- 操作 ---------- */
+
+.controls { margin-top: 14px; }
+.qrow { display: flex; gap: 9px; margin-bottom: 12px; flex-wrap: wrap; }
+.qrow input {
+  flex: 1 1 220px; padding: 12px 13px; font-size: 15px; font-family: inherit;
+  color: var(--o-ink); background: rgba(0,0,0,.28);
+  border: 1px solid var(--o-line); border-radius: 10px;
+}
+.qrow input::placeholder { color: #6d6482; }
+
+.spread { display: flex; gap: 8px; margin-bottom: 12px; }
+.spread button {
+  flex: 1; padding: 10px; font-family: inherit; font-size: 14px;
+  color: var(--o-soft); background: rgba(0,0,0,.2);
+  border: 1px solid var(--o-line); border-radius: 10px; cursor: pointer;
+}
+.spread button.on { color: var(--o-ink); border-color: var(--o-gold); background: rgba(232,189,103,.12); }
+
+.acts { display: flex; gap: 9px; }
+.acts button {
+  flex: 1; padding: 15px; font-family: inherit; font-size: 16px; font-weight: 600;
+  border-radius: 11px; cursor: pointer; border: 1px solid var(--o-line);
+  color: var(--o-ink); background: rgba(255,255,255,.05);
+}
+.acts .primary { border: 0; color: #2a2118; background: linear-gradient(140deg, #e8c583, var(--o-gold)); }
+.acts button:disabled { opacity: .4; cursor: default; }
+
+.status { margin: 12px 0 0; text-align: center; font-size: 13px; color: var(--o-soft); min-height: 1.6em; }
+
+/* ---------- 読み ---------- */
+
+.reading { margin-top: 22px; }
+.rcard {
+  border: 1px solid var(--o-line); border-radius: 16px; padding: 20px;
+  background: rgba(30,27,40,.72); margin-bottom: 14px;
+}
+.rcard-layout { display: grid; grid-template-columns: 142px minmax(0, 1fr); gap: 22px; align-items: start; }
+.rcard-copy { min-width: 0; }
+.rcard-visual {
+  width: 100%; margin: 0; padding: 8px; cursor: pointer;
+  color: var(--o-soft); background: rgba(0,0,0,.24);
+  border: 1px solid var(--o-line); border-radius: 12px;
+  font: inherit;
+}
+.rcard-visual:hover { border-color: var(--o-gold); color: var(--o-ink); }
+.rcard-visual img {
+  display: block; width: 100%; aspect-ratio: 2/3; object-fit: cover;
+  border-radius: 8px; border: 1px solid rgba(232,189,103,.35);
+}
+.rcard-visual img.is-reversed { rotate: 180deg; }
+.rcard-visual span { display: block; margin-top: 7px; font-size: 11px; line-height: 1.5; }
+.rcard .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.rcard .suit { font-size: 11px; letter-spacing: .16em; padding: 3px 9px; border-radius: 5px; }
+.suit.scene { color: var(--o-scene); background: rgba(127,159,212,.14); }
+.suit.heart { color: var(--o-heart); background: rgba(221,163,187,.14); }
+.suit.guide { color: var(--o-guide); background: rgba(134,187,156,.14); }
+.rcard h3 { margin: 0; font-size: 23px; letter-spacing: .05em; }
+.rcard h3 small { font-size: 12px; color: var(--o-soft); margin-left: 7px; font-weight: 400; }
+.rcard .ori { font-size: 12px; color: var(--o-gold); }
+.rcard .pos { margin: 0 0 12px; font-size: 12px; color: var(--o-soft); letter-spacing: .1em; }
+.rcard .line { margin: 0 0 12px; font-size: 18px; line-height: 1.75; color: var(--o-ink); }
+.rcard p.body { margin: 0 0 10px; font-size: 15.5px; color: #ddd5ea; }
+.rcard .act {
+  margin: 14px 0 0; padding: 12px 14px; border-radius: 10px;
+  background: rgba(232,189,103,.1); border: 1px solid rgba(232,189,103,.28); font-size: 15px;
+}
+.rcard .act b { display: block; font-size: 11px; letter-spacing: .16em; color: var(--o-gold); margin-bottom: 3px; }
+.qnote { margin: 0 0 14px; font-size: 13px; color: var(--o-soft); text-align: center; }
+
+/* ---------- 図鑑・履歴 ---------- */
+
+.section { margin-top: 40px; }
+/* 景・心・導の三つの紋をつないだ帯。36枚の入口にだけ置く */
+.section-band {
+  display: block;
+  width: min(460px, 86%);
+  height: auto;
+  margin: 0 auto 2px;
+}
+.section h2 { font-size: 19px; margin: 0 0 4px; }
+.section .lead { margin: 0 0 14px; color: var(--o-soft); font-size: 13px; }
+
+.filters { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
+.filters button {
+  padding: 6px 14px; font-family: inherit; font-size: 13px; cursor: pointer;
+  color: var(--o-soft); background: transparent; border: 1px solid var(--o-line); border-radius: 999px;
+}
+.filters button.on { color: var(--o-ink); border-color: var(--o-gold); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.gallery-card {
+  display: block; min-width: 0; margin: 0; padding: 6px 6px 8px; cursor: pointer;
+  color: var(--o-soft); background: rgba(30,27,40,.44);
+  border: 1px solid transparent; border-radius: 11px; font: inherit;
+}
+.gallery-card:hover, .gallery-card:focus-visible { color: var(--o-ink); border-color: var(--o-gold); outline: none; }
+.grid img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 8px; border: 1px solid var(--o-line); display: block; }
+.gallery-card-name { display: block; font-size: 11.5px; text-align: center; margin-top: 5px; }
+.gallery-card-hint { display: block; font-size: 9.5px; text-align: center; color: var(--o-gold); line-height: 1.4; }
+
+/* ---------- カード説明ウィンドウ ---------- */
+
+.card-dialog {
+  width: min(900px, calc(100% - 28px));
+  max-height: calc(100dvh - 28px);
+  margin: auto; padding: 0; overflow: hidden;
+  color: var(--o-ink); background: #17141f;
+  border: 1px solid rgba(232,189,103,.42); border-radius: 20px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.72);
+}
+.card-dialog::backdrop { background: rgba(5,4,9,.84); backdrop-filter: blur(7px); }
+.card-dialog-shell { position: relative; max-height: calc(100dvh - 28px); padding: 28px; overflow-y: auto; }
+.card-dialog-close {
+  position: sticky; z-index: 2; top: 0; float: right;
+  margin: -12px -12px 4px 12px; padding: 7px 11px;
+  cursor: pointer; color: var(--o-ink); background: rgba(30,27,40,.94);
+  border: 1px solid var(--o-line); border-radius: 999px; font: inherit; font-size: 15px;
+}
+.card-dialog-close span { font-size: 11px; vertical-align: 1px; }
+.card-dialog-close:hover { border-color: var(--o-gold); }
+.card-dialog-layout { display: grid; grid-template-columns: minmax(210px, 280px) minmax(0, 1fr); gap: 30px; align-items: start; clear: both; }
+.card-dialog-visual { margin: 0; position: sticky; top: 8px; }
+.card-dialog-visual img {
+  display: block; width: 100%; aspect-ratio: 2/3; object-fit: cover;
+  border-radius: 14px; border: 1px solid rgba(232,189,103,.55);
+  box-shadow: 0 18px 45px rgba(0,0,0,.48);
+}
+.card-dialog-visual figcaption { margin-top: 9px; text-align: center; color: var(--o-soft); font-size: 11px; letter-spacing: .12em; }
+.card-dialog-info { min-width: 0; }
+.card-dialog-info > .suit { display: inline-block; margin-bottom: 7px; font-size: 11px; letter-spacing: .16em; padding: 3px 9px; border-radius: 5px; }
+.card-dialog-info h2 { margin: 0; font-size: 28px; line-height: 1.45; letter-spacing: .07em; }
+.card-dialog-meta { margin: 2px 0 20px; color: var(--o-soft); font-size: 13px; }
+.card-dialog-side { padding: 18px; border: 1px solid var(--o-line); border-radius: 13px; background: rgba(30,27,40,.68); }
+.card-dialog-side + .card-dialog-side { margin-top: 14px; }
+.card-dialog-side h3 { margin: 0 0 10px; color: var(--o-gold); font-size: 13px; letter-spacing: .1em; }
+.card-dialog-side .line { margin: 0 0 11px; font-size: 17px; line-height: 1.75; }
+.card-dialog-side p.body { margin: 0 0 9px; color: #ddd5ea; font-size: 14.5px; }
+.card-dialog-side .act { margin-top: 13px; padding: 11px 13px; border: 1px solid rgba(232,189,103,.25); border-radius: 9px; background: rgba(232,189,103,.09); font-size: 14px; }
+.card-dialog-side .act b { display: block; margin-bottom: 3px; color: var(--o-gold); font-size: 10.5px; letter-spacing: .14em; }
+
+.hist { list-style: none; margin: 0; padding: 0; }
+.hist li {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 10px 2px; border-bottom: 1px solid var(--o-line); font-size: 14px;
+}
+.hist li time { color: var(--o-soft); font-size: 12px; margin-left: auto; }
+.hist .empty { color: var(--o-soft); font-size: 13.5px; }
+
+.foot { margin-top: 40px; color: var(--o-soft); font-size: 12.5px; line-height: 1.85; }
+.foot a { color: var(--o-gold); }
+
+@media (max-width: 480px) {
+  .stage { height: 300px; }
+  .drawn.is-land { scale: 1.16; }
+}
+
+@media (max-width: 620px) {
+  .rcard { padding: 17px; }
+  .rcard-layout { grid-template-columns: 1fr; }
+  .rcard-visual { width: 150px; justify-self: center; }
+  .card-dialog { width: calc(100% - 16px); max-height: calc(100dvh - 16px); }
+  .card-dialog-shell { max-height: calc(100dvh - 16px); padding: 18px; }
+  .card-dialog-layout { grid-template-columns: 1fr; gap: 22px; }
+  .card-dialog-visual { position: static; width: min(210px, 64vw); justify-self: center; }
+  .card-dialog-info h2 { font-size: 24px; }
+  .card-dialog-side { padding: 15px; }
+}
