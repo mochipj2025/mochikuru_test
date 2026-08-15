@@ -14,3 +14,7 @@ codex_*.txt
 
 # 検算用の並べ画像。手元で作って捨てるだけ。
 slime/tools/_*.png
+
+# 生成の途中経過(316MB)。原本は手元だけに置き、公開しない。
+# Web用の軽量版は assets/hero-pets/ にある。
+pet-runs/
