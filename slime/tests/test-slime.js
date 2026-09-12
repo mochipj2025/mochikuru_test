@@ -4,8 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const HOSHI = path.join(__dirname, '..', '..', 'hoshiyomi', 'assets');
-const SELF = path.join(__dirname, '..', 'assets');
+const HOSHI = path.join(__dirname, '..', '..', 'public', 'hoshiyomi', 'assets');
+const SELF = path.join(__dirname, '..', '..', 'public', 'slime', 'assets');
 
 const sandbox = { window: {}, console, Math, Date, Array, String, Number, isFinite, JSON, Error, RegExp };
 sandbox.globalThis = sandbox;

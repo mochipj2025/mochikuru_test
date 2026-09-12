@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const root = process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(__dirname, '..');
+const root = process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(__dirname, '..', 'public');
 const oracleRoot = fs.existsSync(path.join(root, 'oracle')) ? path.join(root, 'oracle') : root;
 const html = fs.readFileSync(path.join(oracleRoot, 'index.html'), 'utf8');
 const app = fs.readFileSync(path.join(oracleRoot, 'assets/app.js'), 'utf8');

@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const ROOT = path.join(__dirname, '..', 'assets');
+const ROOT = path.join(__dirname, '..', '..', 'public', 'hoshiyomi', 'assets');
 const sandbox = { window: {}, console, Math, Date, Array, String, Number, isFinite, JSON };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);

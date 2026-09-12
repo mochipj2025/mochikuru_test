@@ -6,7 +6,7 @@ const vm = require('vm');
 const sandbox = { window: {}, console, Math, Date, Array, String, Number, JSON, Object, Error, RegExp, document: null };
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
-vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'assets', 'store.js'), 'utf8'), sandbox);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'assets', 'store.js'), 'utf8'), sandbox);
 const S = sandbox.window.MOCHI_STORE;
 
 let fails = 0;

@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const ROOT = path.join(__dirname, '..');
+const ROOT = path.join(__dirname, '..', 'public');
 const TARGETS = [
   ['スライム', 'slime/assets/text.js', 'SLIME_TEXT'],
   ['お金',     'money/assets/text.js', 'MONEY_TEXT'],

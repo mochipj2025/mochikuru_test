@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const root = path.resolve(__dirname, '..');
+const root = path.resolve(__dirname, '..', 'public');
 const failures = [];
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 const expect = (ok, message) => { if (!ok) failures.push(message); };
